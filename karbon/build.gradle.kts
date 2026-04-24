@@ -60,7 +60,7 @@ kotlin {
 mavenPublishing {
     publishToMavenCentral()
 
-    signAllPublications()
+//    signAllPublications()
 
     coordinates("com.soheib-ta", "karbon", version.toString())
 

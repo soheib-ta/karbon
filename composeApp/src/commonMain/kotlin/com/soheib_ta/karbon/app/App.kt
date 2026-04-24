@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.soheib_ta.karbon.charts.barchart.BarChart
+import com.soheib_ta.karbon.charts.barchart.BarChartConfig
 import com.soheib_ta.karbon.charts.barchart.data.BarEntry
 import com.soheib_ta.karbon.charts.barchart.data.BarSeries
 
@@ -36,18 +37,21 @@ fun App() {
                     BarSeries(
                         key = "visits",
                         label = "Visits",
-                        colors = listOf(Color(0xFF4285F4))
+                        colors = listOf(Color(0xFF4285F4)),
+                        radius = 12.dp
                     ),
                     BarSeries(
                         key = "revenue",
                         label = "Revenue",
-                        colors = listOf(Color(0xFF34A853))
+                        colors = listOf(Color(0xFF34A853)),
+                        radius = 8.dp
                     )
                 )
 
                 BarChart(
                     entries = entries,
                     series = series,
+                    config = BarChartConfig(),
                     modifier = Modifier.fillMaxSize().padding(16.dp),
                     title = { Text("Monthly Stats") }
                 )
