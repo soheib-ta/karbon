@@ -9,6 +9,7 @@ import com.soheib_ta.karbon.charts.barchart.DistributionMode
 import com.soheib_ta.karbon.charts.barchart.data.BarEntry
 import com.soheib_ta.karbon.charts.barchart.data.BarSeries
 import kotlin.math.ceil
+import kotlin.math.max
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Layout constants
@@ -141,18 +142,30 @@ private fun computeDimensionsImpl(
     val barSpacingPx   = config.barSpacing.toPx()
 
     // innerWidth excludes the Y-axis panel and (for the bars canvas) horizontal padding
-    val innerWidth = size.width - marginLeft - marginRight -
-            (if (!includeLeftMargin) hPad * 2 else 0f)
+    val innerWidth = (size.width - marginLeft - marginRight -
+            (if (!includeLeftMargin) hPad * 2 else 0f)).coerceAtLeast(1f)
 
     // ── Base group width (at scale = 1) ───────────────────────────────────
-    val baseGroupWidth: Float = when (val mode = config.distributionMode) {
-        is DistributionMode.Even ->
-            if (groupCount > 0) (innerWidth - (groupCount - 1) * groupSpacingPx) / groupCount
-            else innerWidth
-        is DistributionMode.Fixed -> mode.groupWidth.toPx()
+    val minimumGroupWidth = if (seriesCount > 0) {
+        seriesCount * MIN_BAR_WIDTH_PX + maxOf(0, seriesCount - 1) * barSpacingPx
+    } else {
+        MIN_BAR_WIDTH_PX
     }
 
-    val groupWidth = baseGroupWidth * zoomScale
+    val baseGroupWidth: Float = when (val mode = config.distributionMode) {
+        is DistributionMode.Even -> {
+            val available = if (groupCount > 0) {
+                (innerWidth - (groupCount - 1) * groupSpacingPx) / groupCount
+            } else {
+                innerWidth
+            }
+            max(minimumGroupWidth, available)
+        }
+        is DistributionMode.Fixed -> max(minimumGroupWidth, mode.groupWidth.toPx())
+    }
+
+    val safeZoomScale = zoomScale.takeIf { it.isFinite() && it > 0f } ?: 1f
+    val groupWidth = max(minimumGroupWidth, baseGroupWidth * safeZoomScale)
 
     // ── Diagonal label detection ──────────────────────────────────────────
     //   Uses zoomed groupWidth so labels flip back to horizontal when the
@@ -161,9 +174,13 @@ private fun computeDimensionsImpl(
     val diagonal = config.forceDiagonalLabels ?: (groupWidth < longestLabelPx)
 
     val marginBottom = if (diagonal) MARGIN_BOTTOM_DIAGONAL_DP.toPx() else MARGIN_BOTTOM_DP.toPx()
-    val innerHeight  = size.height - marginTop - marginBottom
+    val innerHeight  = (size.height - marginTop - marginBottom).coerceAtLeast(1f)
 
-    val barWidth = maxOf(MIN_BAR_WIDTH_PX, (groupWidth - (seriesCount - 1) * barSpacingPx) / seriesCount)
+    val barWidth = if (seriesCount > 0) {
+        maxOf(MIN_BAR_WIDTH_PX, (groupWidth - (seriesCount - 1) * barSpacingPx) / seriesCount)
+    } else {
+        0f
+    }
 
     // ── Y ceiling — rounds up to the nearest 1 000 ────────────────────────
     val maxVal = computeMaxValue(entries, series)
@@ -195,7 +212,11 @@ private fun computeDimensionsImpl(
 // ─────────────────────────────────────────────────────────────────────────────
 
 internal fun computeMaxValue(entries: List<BarEntry>, series: List<BarSeries>): Float =
-    entries.flatMap { entry -> series.map { s -> entry.values[s.key] ?: 0f } }.maxOrNull() ?: 0f
+    entries.asSequence()
+        .flatMap { entry -> series.asSequence().map { item -> entry.values[item.key] ?: 0f } }
+        .filter { it.isFinite() && it > 0f }
+        .maxOrNull()
+        ?: 0f
 
 // ─────────────────────────────────────────────────────────────────────────────
 // computeInitialBarsCanvasWidth

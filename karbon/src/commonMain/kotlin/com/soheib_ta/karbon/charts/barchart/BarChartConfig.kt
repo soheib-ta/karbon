@@ -29,7 +29,11 @@ sealed interface DistributionMode {
      *
      * @param groupWidth Fixed width per group at zoom scale = 1.
      */
-    data class Fixed(val groupWidth: Dp = 100.dp) : DistributionMode
+    data class Fixed(val groupWidth: Dp = 100.dp) : DistributionMode {
+        init {
+            require(groupWidth.value > 0f) { "groupWidth must be positive." }
+        }
+    }
 }
 
 
@@ -138,6 +142,11 @@ data class BarChartConfig(
 ) {
     init {
         require(yTickCount >= 2) { "yTickCount must be at least 2." }
+        require(innerHorizontalPadding.value >= 0f) { "innerHorizontalPadding must not be negative." }
+        require(outerHorizontalPadding.value >= 0f) { "outerHorizontalPadding must not be negative." }
+        require(groupSpacing.value >= 0f) { "groupSpacing must not be negative." }
+        require(barSpacing.value >= 0f) { "barSpacing must not be negative." }
+        require(chartHeight.value > 0f) { "chartHeight must be positive." }
         require(visibilityThreshold in 0f..1f) { "visibilityThreshold must be in 0..1." }
     }
 }

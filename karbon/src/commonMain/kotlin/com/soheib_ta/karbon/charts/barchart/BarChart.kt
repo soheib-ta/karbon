@@ -171,7 +171,6 @@ fun BarChart(
                 Column(modifier = Modifier.weight(1f)) {
                     title?.invoke()
                     if (description != null) {
-                        Spacer(Modifier.height(2.dp))
                         description()
                     }
                 }

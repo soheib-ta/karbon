@@ -129,8 +129,8 @@ internal fun DrawScope.drawBarsPanel(
             val groupLeft = dims.groupLeft(groupIdx)
 
             series.forEachIndexed { seriesIdx, s ->
-                val value      = entry.values[s.key] ?: 0f
-                val barHeight  = (value / dims.yMax) * dims.innerHeight * animationProgress
+                val value      = (entry.values[s.key] ?: 0f).takeIf { it.isFinite() }?.coerceAtLeast(0f) ?: 0f
+                val barHeight  = (value / dims.yMax) * dims.innerHeight * animationProgress.coerceIn(0f, 1f)
                 val barLeft    = groupLeft + seriesIdx * (dims.barWidth + dims.barSpacing)
                 val barTop     = dims.innerHeight - barHeight
                 val topLeft    = Offset(barLeft, barTop)
@@ -288,7 +288,7 @@ internal fun findTappedBar(
     entries.forEachIndexed { groupIdx, entry ->
         val groupLeft = dims.groupLeft(groupIdx)
         series.forEachIndexed { seriesIdx, s ->
-            val value     = entry.values[s.key] ?: 0f
+            val value     = (entry.values[s.key] ?: 0f).takeIf { it.isFinite() }?.coerceAtLeast(0f) ?: 0f
             val barHeight = (value / dims.yMax) * dims.innerHeight
             val barLeft   = groupLeft + seriesIdx * (dims.barWidth + dims.barSpacing)
 

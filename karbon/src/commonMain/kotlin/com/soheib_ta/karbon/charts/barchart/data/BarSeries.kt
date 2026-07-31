@@ -25,7 +25,9 @@ data class BarSeries(
     val radius: Dp = 4.dp,
 ) {
     init {
+        require(key.isNotBlank()) { "BarSeries key must not be blank." }
         require(colors.isNotEmpty()) { "BarSeries '$key' must have at least one colour." }
+        require(radius.value >= 0f) { "BarSeries radius must not be negative." }
     }
 
     /** True when this series should be drawn with a vertical gradient. */
