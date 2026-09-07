@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "com.soheib-ta"
-version = "1.0.1"
+version = "1.0.2"
 
 kotlin {
     jvm()
